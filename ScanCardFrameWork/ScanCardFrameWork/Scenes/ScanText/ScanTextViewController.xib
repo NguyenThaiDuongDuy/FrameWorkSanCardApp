@@ -25,7 +25,6 @@
                 <outlet property="issueDateLabel" destination="pQw-Zh-gcM" id="IeM-kY-nSm"/>
                 <outlet property="issueDateStackView" destination="dVV-EL-CN3" id="SVb-XO-lem"/>
                 <outlet property="issueDateTextField" destination="o68-4Z-OGW" id="DV1-Sk-wET"/>
-                <outlet property="optionsScanView" destination="7G7-PI-R9h" id="JWG-Ft-IZB"/>
                 <outlet property="scrollView" destination="oqW-An-VJd" id="shP-Kq-Fdv"/>
                 <outlet property="shadowOfInformationView" destination="sAt-60-aWg" id="S9i-me-vxG"/>
                 <outlet property="view" destination="iN0-l3-epB" id="QpO-V3-ARr"/>
@@ -40,7 +39,7 @@
                     <rect key="frame" x="0.0" y="44" width="414" height="852"/>
                     <subviews>
                         <view contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" translatesAutoresizingMaskIntoConstraints="NO" id="N2g-3C-3Va">
-                            <rect key="frame" x="0.0" y="0.0" width="414" height="693"/>
+                            <rect key="frame" x="0.0" y="0.0" width="414" height="638"/>
                             <subviews>
                                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="sBK-zk-2Kc" customClass="CardImageView" customModule="ScanCardFrameWork" customModuleProvider="target">
                                     <rect key="frame" x="0.0" y="0.0" width="414" height="300"/>
@@ -50,22 +49,8 @@
                                     </constraints>
                                     <edgeInsets key="layoutMargins" top="8" left="8" bottom="8" right="8"/>
                                 </imageView>
-                                <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="7G7-PI-R9h">
-                                    <rect key="frame" x="15" y="310" width="384" height="50"/>
-                                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                                    <constraints>
-                                        <constraint firstAttribute="height" constant="50" id="1Cu-D4-591"/>
-                                    </constraints>
-                                    <collectionViewFlowLayout key="collectionViewLayout" scrollDirection="horizontal" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="jCn-CH-b5d">
-                                        <size key="itemSize" width="128" height="128"/>
-                                        <size key="headerReferenceSize" width="0.0" height="0.0"/>
-                                        <size key="footerReferenceSize" width="0.0" height="0.0"/>
-                                        <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
-                                    </collectionViewFlowLayout>
-                                    <cells/>
-                                </collectionView>
                                 <view contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sAt-60-aWg" customClass="ShadowView" customModule="ScanCardFrameWork" customModuleProvider="target">
-                                    <rect key="frame" x="15" y="370" width="384" height="248"/>
+                                    <rect key="frame" x="15" y="315" width="384" height="248"/>
                                     <subviews>
                                         <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="8LM-rK-7n7">
                                             <rect key="frame" x="5" y="5" width="374" height="238"/>
@@ -146,7 +131,7 @@
                                     </constraints>
                                 </view>
                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6OI-vh-BvR" customClass="BlueStyleButton" customModule="ScanCardFrameWork" customModuleProvider="target">
-                                    <rect key="frame" x="15" y="633" width="384" height="40"/>
+                                    <rect key="frame" x="15" y="578" width="384" height="40"/>
                                     <color key="backgroundColor" systemColor="systemYellowColor"/>
                                     <constraints>
                                         <constraint firstAttribute="height" constant="40" id="qH1-9S-bVo"/>
@@ -161,13 +146,10 @@
                             <constraints>
                                 <constraint firstItem="sAt-60-aWg" firstAttribute="leading" secondItem="N2g-3C-3Va" secondAttribute="leading" constant="15" id="4Ad-oU-fQE"/>
                                 <constraint firstAttribute="bottom" secondItem="6OI-vh-BvR" secondAttribute="bottom" constant="20" id="Aus-jS-sIl"/>
-                                <constraint firstItem="sAt-60-aWg" firstAttribute="top" secondItem="7G7-PI-R9h" secondAttribute="bottom" constant="10" id="HpA-PY-Kxe"/>
                                 <constraint firstItem="sBK-zk-2Kc" firstAttribute="top" secondItem="N2g-3C-3Va" secondAttribute="top" id="J7T-LW-Rm0"/>
                                 <constraint firstItem="6OI-vh-BvR" firstAttribute="leading" secondItem="N2g-3C-3Va" secondAttribute="leading" constant="15" id="V74-qH-cQt"/>
-                                <constraint firstItem="7G7-PI-R9h" firstAttribute="top" secondItem="sBK-zk-2Kc" secondAttribute="bottom" constant="10" id="cjh-cs-bOc"/>
                                 <constraint firstAttribute="trailing" secondItem="6OI-vh-BvR" secondAttribute="trailing" constant="15" id="ezU-2V-Rco"/>
-                                <constraint firstAttribute="trailing" secondItem="7G7-PI-R9h" secondAttribute="trailing" constant="15" id="f5S-N5-XhI"/>
-                                <constraint firstItem="7G7-PI-R9h" firstAttribute="leading" secondItem="N2g-3C-3Va" secondAttribute="leading" constant="15" id="i35-fg-ZiP"/>
+                                <constraint firstItem="sAt-60-aWg" firstAttribute="top" secondItem="sBK-zk-2Kc" secondAttribute="bottom" constant="15" id="keH-M1-Hk1"/>
                                 <constraint firstAttribute="trailing" secondItem="sAt-60-aWg" secondAttribute="trailing" constant="15" id="qey-3m-9ct"/>
                                 <constraint firstItem="6OI-vh-BvR" firstAttribute="top" secondItem="sAt-60-aWg" secondAttribute="bottom" constant="15" id="r7L-c4-4jh"/>
                                 <constraint firstItem="sBK-zk-2Kc" firstAttribute="leading" secondItem="N2g-3C-3Va" secondAttribute="leading" id="s44-2v-fzb"/>

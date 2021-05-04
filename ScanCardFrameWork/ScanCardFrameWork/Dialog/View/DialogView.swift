@@ -35,7 +35,7 @@ class DialogView: UIView {
         Bundle(for: type(of: self)).loadNibNamed(String(describing: type(of: self)), owner: self, options: nil)
         addSubview(contentView)
         contentView.frame = frame
-        setInformationDialog()
+        //setInformationDialog()
     }
 
     @IBAction func tapCancelButton(_ sender: Any) {
@@ -46,10 +46,10 @@ class DialogView: UIView {
         removeFromSuperview()
     }
 
-    func setInformationDialog() {
-        title.text = Language.share.localized(string: viewModel?.title ?? "")
-        message.text = Language.share.localized(string: viewModel?.message ?? "")
-        cancelButton.setTitle(Language.share.localized(string: viewModel?.cancelButtonTitle ?? ""), for: .normal)
-        okButton.setTitle(Language.share.localized(string: viewModel?.okButtonTitle ?? ""), for: .normal)
-    }
+//    func setInformationDialog() {
+//        title.text = Language.share.localized(string: viewModel?.title ?? "")
+//        message.text = Language.share.localized(string: viewModel?.message ?? "")
+//        cancelButton.setTitle(Language.share.localized(string: viewModel?.cancelButtonTitle ?? ""), for: .normal)
+//        okButton.setTitle(Language.share.localized(string: viewModel?.okButtonTitle ?? ""), for: .normal)
+//    }
 }

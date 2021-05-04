@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct Card {
-    var cardHolder: String
-    var cardNumber: String
-    var issueDate: String?
-    var expiryDate: String?
+public struct Card {
+    public var cardHolder: String
+    public var cardNumber: String
+    public var issueDate: String?
+    public var expiryDate: String?
 }

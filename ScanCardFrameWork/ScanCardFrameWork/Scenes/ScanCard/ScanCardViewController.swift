@@ -4,7 +4,6 @@ import Vision
 
 public enum ScanMode {
     case auto
-    case all
     case cardHolder
     case cardNumber
     case issueDate
@@ -17,9 +16,6 @@ public enum ScanMode {
         case .auto:
             return "auto"
             
-        case .all:
-            return "all"
-            
         case .cardHolder:
             return "Card Holder"
             
@@ -31,8 +27,6 @@ public enum ScanMode {
             
         case .expiryDate:
             return "Expiry Date"
-            
-       
         }
     }
 }
@@ -40,53 +34,54 @@ open class ScanCardViewController: UIViewController {
     
     var scanMode: ScanMode
     var viewModel: ScanCardViewModel?
+    //public weak var delegate: ScanCardViewControllerDelegate?
     
     private let scanButtonTitle = "Scan"
     private let scanNavigationTitle = "Scan Card"
     private let languages = ["En", "Vn"]
     private let numberOfComponent = 1
-
+    
     @IBOutlet weak var liveVideoView: PreviewView!
     @IBOutlet weak var scanButton: BlueStyleButton!
     @IBOutlet weak var shadowView: ShadowView!
     @IBOutlet weak var languagePickerView: UIPickerView!
-
+    
     private var boundingBoxLayer: CALayer?
     private var cardRectangleObservation: VNRectangleObservation?
     private var sampleBuffer: CMSampleBuffer?
     private var recognizedStrings: [String]?
-
+    
     private lazy var service: CameraService = {
         let service = CameraService(viewController: self)
         return service
     }()
-
+    
     public init(scanMode: ScanMode = .cardHolder) {
         self.scanMode = scanMode
         super.init(nibName: String(describing: type(of: self)), bundle: Bundle(for: type(of: self)))
     }
-
+    
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     open override func viewDidLoad() {
         super.viewDidLoad()
         setLanguageForView()
         setUpNavigationController()
     }
-
+    
     open override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         setUpLiveView()
         setUpLanguageChosenView()
     }
-
+    
     private func setUpLanguageChosenView() {
         languagePickerView.delegate = self
         languagePickerView.dataSource = self
     }
-
+    
     private func setUpLiveView() {
         liveVideoView.videoPreviewLayer.videoGravity = .resizeAspectFill
         liveVideoView.videoPreviewLayer.cornerRadius = 30
@@ -95,13 +90,13 @@ open class ScanCardViewController: UIViewController {
         let tapAction = UITapGestureRecognizer(target: self, action: #selector(tapLiveVideoView))
         liveVideoView.addGestureRecognizer(tapAction)
     }
-
+    
     private func setUpNavigationController() {
         navigationController?.navigationBar.setBackgroundImage(UIImage(),
                                                                for: UIBarMetrics.default)
         navigationController?.navigationBar.shadowImage = UIImage()
     }
-
+    
     @objc func tapLiveVideoView() {
         service.session.stopRunning()
         guard let cardRectangleObservation = self.cardRectangleObservation,
@@ -111,7 +106,7 @@ open class ScanCardViewController: UIViewController {
         dismiss(animated: true) {
             self.service.stopConnectCamera()
             switch self.scanMode {
-            case .all, .cardHolder, .cardNumber, .expiryDate, .issueDate:
+            case .cardHolder, .cardNumber, .expiryDate, .issueDate:
                 let scanTextView = ScanTextViewController(cardImage: cropFrame, mode: self.scanMode)
                 self.navigationController?.pushViewController(scanTextView, animated: true)
             case .auto:
@@ -119,15 +114,14 @@ open class ScanCardViewController: UIViewController {
                 self.viewModel?.delegate = self
                 self.viewModel?.getInfoCardAuto()
             }
-           
         }
     }
-
+    
     private func setLanguageForView() {
         scanButton.setTitle(Language.share.localized(string: scanButtonTitle), for: .normal)
         title = Language.share.localized(string: scanNavigationTitle)
     }
-
+    
     @IBAction func tapScanButton(_ sender: Any) {
         requestUsingCamera { (canUse) in
             if canUse {
@@ -138,13 +132,13 @@ open class ScanCardViewController: UIViewController {
             }
         }
     }
-
+    
     func requestUsingCamera(completion: @escaping (Bool) -> Void) {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized: // The user has previously granted access to the camera.
             Logger.log("User authorized")
             completion(true)
-
+            
         case .notDetermined: // The user has not yet been asked for camera access.
             AVCaptureDevice.requestAccess(for: .video) { granted in
                 if granted {
@@ -155,16 +149,16 @@ open class ScanCardViewController: UIViewController {
                     completion(false)
                 }
             }
-
+            
         case .denied: // The user has previously denied access.
             // Show dialog
             completion(false)
             Logger.log("User denied")
-
+            
         case .restricted: // The user can't grant access due to restrictions.
             completion(false)
             Logger.log("User restricted")
-
+            
         @unknown default:
             completion(false)
             Logger.log("Something came up")
@@ -174,45 +168,46 @@ open class ScanCardViewController: UIViewController {
 
 extension ScanCardViewController: ScanCardModelDelegate {
     func didGetInfoCardAuto(infoCard: Card) {
-        print(infoCard as Any)
+        let infoCardDataDict:[String: Card] = ["infoCard": infoCard]
+        let nameNotify = Notification.Name("autoInformationKey")
+        NotificationCenter.default.post(name: nameNotify, object: nil, userInfo: infoCardDataDict)
+        navigationController?.popViewController(animated: true)
     }
-    
-    
 }
 
 extension ScanCardViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
-
+    
     public func captureOutput(_ output: AVCaptureOutput,
-                       didOutput sampleBuffer: CMSampleBuffer,
-                       from connection: AVCaptureConnection) {
+                              didOutput sampleBuffer: CMSampleBuffer,
+                              from connection: AVCaptureConnection) {
         DispatchQueue.main.async {
             self.removeBoundingBox()
             ImageDetector.detectCard(sampleBuffer: sampleBuffer) { resultOfDetectCard in
                 switch resultOfDetectCard {
-
+                
                 case .success(let rectangle):
                     self.drawBoundingBox(rect: rectangle)
                     self.sampleBuffer = sampleBuffer
                     self.cardRectangleObservation = rectangle
-
+                    
                 case .failure(let error):
                     Logger.log(error.localizedDescription)
                 }
             }
         }
     }
-
-    // Crop image in boundingbox
+    
+    // Crop image in bounding box
     private func extractPerspectiveRect(_ observation: VNRectangleObservation, from buffer: CVImageBuffer) -> CIImage {
         // get the pixel buffer into Core Image
         let ciImage = CIImage(cvImageBuffer: buffer)
-
+        
         // convert corners from normalized image coordinates to pixel coordinates
         let topLeft = observation.topLeft.convertToPixelCoordinate(to: ciImage.extent.size)
         let topRight = observation.topRight.convertToPixelCoordinate(to: ciImage.extent.size)
         let bottomLeft = observation.bottomLeft.convertToPixelCoordinate(to: ciImage.extent.size)
         let bottomRight = observation.bottomRight.convertToPixelCoordinate(to: ciImage.extent.size)
-
+        
         // pass those to the filter to extract/rectify the image
         return ciImage.applyingFilter("CIPerspectiveCorrection", parameters: [
             "inputTopLeft": CIVector(cgPoint: topLeft),
@@ -221,7 +216,7 @@ extension ScanCardViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
             "inputBottomRight": CIVector(cgPoint: bottomRight)
         ])
     }
-
+    
     private func drawBoundingBox(rect: VNRectangleObservation) {
         let convertUIKitRect = VNImageRectForNormalizedRect(rect.boundingBox,
                                                             (Int)(liveVideoView.bounds.width),
@@ -234,28 +229,28 @@ extension ScanCardViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
         boundingBoxLayer?.borderWidth = 5.0
         liveVideoView.layer.addSublayer(boundingBoxLayer ?? CAShapeLayer())
     }
-
+    
     private func removeBoundingBox() {
         boundingBoxLayer?.removeFromSuperlayer()
     }
 }
 
 extension ScanCardViewController: UIPickerViewDataSource, UIPickerViewDelegate {
-
+    
     public func numberOfComponents(in pickerView: UIPickerView) -> Int {
         numberOfComponent
     }
-
+    
     public func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         languages.count
     }
-
+    
     public func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int,
-                    forComponent component: Int) -> NSAttributedString? {
+                           forComponent component: Int) -> NSAttributedString? {
         NSAttributedString(string: languages[row],
                            attributes: [NSAttributedString.Key.foregroundColor: UIColor.white])
     }
-
+    
     public func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         Language.share.isEnglish = languages[row] == "En"
         setLanguageForView()
@@ -264,6 +259,8 @@ extension ScanCardViewController: UIPickerViewDataSource, UIPickerViewDelegate {
 
 class ScanCardViewModel {
     
+    let maxCardNumber = 19
+    let minCardNumber = 16
     var image: CIImage
     var infoCard: Card = Card(cardHolder: "",
                               cardNumber: "",
@@ -287,15 +284,93 @@ class ScanCardViewModel {
                 print(error.localizedDescription)
                 
             case .success(let strings):
-                self.infoCard =  CheckValidCardInfo.getInfoCardAuto(information: strings)
+                self.infoCard = self.getInfoCardAuto(information: strings)
                 self.delegate?.didGetInfoCardAuto(infoCard: self.infoCard)
             }
         }
+    }
+    
+    func isValidCardNumber(cardNumber: String) -> Bool {
+        let vowels: Set<Character> = [" "]
+        var checkCardNumber = ""
+        checkCardNumber = cardNumber
+        checkCardNumber.removeAll(where: { vowels.contains($0) })
+        
+        if !checkCardNumber.isNumeric { return false }
+        
+        if checkCardNumber.count<minCardNumber || checkCardNumber.count>maxCardNumber {
+            return false
+        }
+        return true
+    }
+    
+    func isValidCardHolder(cardHolder: String) -> Bool {
+        if !cardHolder.isOnlyUpCaseAndWhiteSpaceCharacter { return false }
+        let nameAfterCutWhiteSpacesAndNewlines = cardHolder.components(separatedBy: .whitespacesAndNewlines)
+            .filter({ !$0.isEmpty })
+            .joined(separator: " ")
+        return nameAfterCutWhiteSpacesAndNewlines.contains(" ")
+    }
+    
+    func isValidIssueDate(checkIssueDate: String) -> Bool {
+        let dateStringAfterFilter = String(checkIssueDate.getDateString())
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM/yy"
+        let inputDate = dateFormatter.date(from: dateStringAfterFilter)
+        guard let checkInputDate = inputDate else {
+            return false }
+        return checkInputDate < Date()
+    }
+    
+    func isValidExpiryDate(checkExpiryDate: String) -> Bool {
+        let dateStringAfterFilter = String(checkExpiryDate.getDateString())
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM/yy"
+        let inputDate = dateFormatter.date(from: dateStringAfterFilter)
+        guard let checkInputDate = inputDate else { return false }
+        return checkInputDate > Date()
+    }
+    
+    func getInfoCardAuto(information: [String]?) -> Card {
+        Logger.log(information as Any)
+        var cardInfo = Card(cardHolder: "",
+                            cardNumber: "",
+                            issueDate: "",
+                            expiryDate: "")
+        guard let checkInformation = information else { return cardInfo }
+        
+        for index in stride(from: checkInformation.count - 1, to: 0, by: -1) {
+            
+            if self.isValidCardHolder(cardHolder: checkInformation[index]) &&
+                (((cardInfo.cardHolder.isEmpty))) {
+                cardInfo.cardHolder = checkInformation[index]
+            }
+            
+            if self.isValidCardNumber(cardNumber: checkInformation[index])
+                && ((cardInfo.cardNumber.isEmpty)) {
+                cardInfo.cardNumber = checkInformation[index]
+            }
+            
+            if self.isValidIssueDate(checkIssueDate: checkInformation[index])
+                && ((cardInfo.issueDate!.isEmpty)) {
+                cardInfo.issueDate = String(checkInformation[index].getDateString())
+            }
+            
+            if self.isValidExpiryDate(checkExpiryDate: checkInformation[index])
+                && ((cardInfo.expiryDate!.isEmpty)) {
+                cardInfo.expiryDate = String(checkInformation[index].getDateString())
+            }
+        }
+        return cardInfo
     }
 }
 
 protocol ScanCardModelDelegate: AnyObject {
     func didGetInfoCardAuto(infoCard: Card)
 }
+
+//public protocol ScanCardViewControllerDelegate: AnyObject {
+//    func didGetInfoCardAuto(infoCard: Card)
+//}
 
 
