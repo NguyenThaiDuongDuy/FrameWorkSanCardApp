@@ -1,0 +1,18 @@
+/* 
+  Vietnamese.strings
+  ScanCard
+
+  Created by admin on 23/04/2021.
+  
+*/
+"Scan" = "Quét";
+"Scan Card" = "Quét thẻ";
+"Card Holder" = "Chủ thẻ";
+"Card Number" = "Số thẻ";
+"Issue Date" = "Ngày tạo";
+"Expiry Date" = "Ngày hết hạn";
+"Confirm" = "Xác nhận";
+"Notice" = "Thông báo";
+"Ok" = "Đồng ý";
+"Cancel" = "Huỷ";
+                        
