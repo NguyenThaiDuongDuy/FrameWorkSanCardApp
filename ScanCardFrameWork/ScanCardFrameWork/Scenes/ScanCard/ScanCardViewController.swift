@@ -4,17 +4,22 @@ import Vision
 
 public enum ScanMode {
     case auto
+    case drawInfo
     case cardHolder
     case cardNumber
     case issueDate
     case expiryDate
     
-    static let allModeManual = [cardHolder, cardNumber, issueDate, expiryDate]
+    public static let allMode = [auto, drawInfo, cardHolder, cardNumber, issueDate, expiryDate]
     
-    var modeString: String {
+    public var modeString: String {
+        
         switch self {
         case .auto:
             return "auto"
+            
+        case .drawInfo:
+        return "draw Info"
             
         case .cardHolder:
             return "Card Holder"
@@ -109,10 +114,10 @@ open class ScanCardViewController: UIViewController {
             case .cardHolder, .cardNumber, .expiryDate, .issueDate:
                 let scanTextView = ScanTextViewController(cardImage: cropFrame, mode: self.scanMode)
                 self.navigationController?.pushViewController(scanTextView, animated: true)
-            case .auto:
-                self.viewModel = ScanCardViewModel(image: cropFrame)
+            case .auto, .drawInfo:
+                self.viewModel = ScanCardViewModel(image: cropFrame, scanMode: self.scanMode)
                 self.viewModel?.delegate = self
-                self.viewModel?.getInfoCardAuto()
+                self.viewModel?.getInfoCard()
             }
         }
     }
@@ -167,9 +172,9 @@ open class ScanCardViewController: UIViewController {
 }
 
 extension ScanCardViewController: ScanCardModelDelegate {
-    func didGetInfoCardAuto(infoCard: Card) {
-        let infoCardDataDict:[String: Card] = ["infoCard": infoCard]
-        let nameNotify = Notification.Name("autoInformationKey")
+    func didGetInfoCardAuto(infoCard: [String]) {
+        let infoCardDataDict:[String: [String]] = ["infoCard": infoCard]
+        let nameNotify = Notification.Name("infoFromScanCardViewController")
         NotificationCenter.default.post(name: nameNotify, object: nil, userInfo: infoCardDataDict)
         navigationController?.popViewController(animated: true)
     }
@@ -262,18 +267,15 @@ class ScanCardViewModel {
     let maxCardNumber = 19
     let minCardNumber = 16
     var image: CIImage
-    var infoCard: Card = Card(cardHolder: "",
-                              cardNumber: "",
-                              issueDate: "",
-                              expiryDate: "")
-    
+    let scanMode: ScanMode
     weak var delegate: ScanCardModelDelegate?
     
-    init(image: CIImage) {
+    init(image: CIImage, scanMode: ScanMode) {
         self.image = image
+        self.scanMode = scanMode
     }
     
-    func getInfoCardAuto() {
+    func getInfoCard() {
         let context = CIContext()
         guard let cgImage = context.createCGImage(image, from: image.extent) else {
             Logger.log("Can't created cgImage from image")
@@ -284,11 +286,20 @@ class ScanCardViewModel {
                 print(error.localizedDescription)
                 
             case .success(let strings):
-                self.infoCard = self.getInfoCardAuto(information: strings)
-                self.delegate?.didGetInfoCardAuto(infoCard: self.infoCard)
+                self.sendInfo(info: strings)
             }
         }
     }
+    
+    private func sendInfo(info: [String]) {
+        if self.scanMode == .auto {
+            self.delegate?.didGetInfoCardAuto(infoCard: self.getInfoCardAuto(information: info))
+        } else {
+            self.delegate?.didGetInfoCardAuto(infoCard:info)
+        }
+    }
+    
+    
     
     func isValidCardNumber(cardNumber: String) -> Bool {
         let vowels: Set<Character> = [" "]
@@ -331,13 +342,13 @@ class ScanCardViewModel {
         return checkInputDate > Date()
     }
     
-    func getInfoCardAuto(information: [String]?) -> Card {
+    func getInfoCardAuto(information: [String]?) -> [String] {
         Logger.log(information as Any)
         var cardInfo = Card(cardHolder: "",
                             cardNumber: "",
                             issueDate: "",
                             expiryDate: "")
-        guard let checkInformation = information else { return cardInfo }
+        guard let checkInformation = information else { return [] }
         
         for index in stride(from: checkInformation.count - 1, to: 0, by: -1) {
             
@@ -361,16 +372,17 @@ class ScanCardViewModel {
                 cardInfo.expiryDate = String(checkInformation[index].getDateString())
             }
         }
-        return cardInfo
+        var tmp: [String] = []
+        tmp.append("cardHolder: \(cardInfo.cardHolder)")
+        tmp.append("cardNumber: \(cardInfo.cardNumber)")
+        tmp.append("issueDate: \(cardInfo.issueDate!)")
+        tmp.append("expiryDate: \(cardInfo.expiryDate!)")
+        return tmp
     }
 }
 
 protocol ScanCardModelDelegate: AnyObject {
-    func didGetInfoCardAuto(infoCard: Card)
+    func didGetInfoCardAuto(infoCard: [String])
 }
-
-//public protocol ScanCardViewControllerDelegate: AnyObject {
-//    func didGetInfoCardAuto(infoCard: Card)
-//}
 
 

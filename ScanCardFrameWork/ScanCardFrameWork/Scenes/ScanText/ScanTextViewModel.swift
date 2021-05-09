@@ -8,50 +8,25 @@
 import UIKit
 
 protocol ScanTextViewModelDelegate: AnyObject {
-    func didGetCardInfo()
+    func didGetCardInfo(info: String)
 }
 
 class ScanTextViewModel {
-    
-    var cardInfo: Card = Card(cardHolder: "",
-                              cardNumber: "",
-                              issueDate: "",
-                              expiryDate: "")
     var image: CIImage
-    var scanMode: ScanMode
-    
     weak var delegate: ScanTextViewModelDelegate?
     
-    init(image: CIImage, mode: ScanMode) {
+    init(image: CIImage) {
         self.image = image
-        self.scanMode = mode
     }
     
-    func setTextInfoWithMode(textImage: CGImage, mode: ScanMode) {
+    func setTextInfoWithMode(textImage: CGImage) {
         ImageDetector.detectText(cgImage: textImage) { (resultOfDetectText) in
             switch resultOfDetectText {
             case .success(let strings):
-                switch mode {
-                case .cardHolder:
-                    self.cardInfo.cardHolder = strings.first ?? ""
-                    
-                case .cardNumber:
-                    self.cardInfo.cardNumber = strings.first ?? ""
-                    
-                case .issueDate:
-                    self.cardInfo.issueDate = strings.first
-                    
-                case .expiryDate:
-                    self.cardInfo.expiryDate = strings.first
-                    
-                case .auto:
-                    return
-                }
-                
+                self.delegate?.didGetCardInfo(info: strings.first ?? "")
             case .failure(let error):
-                Logger.log(error.localizedDescription)
+                print(error.localizedDescription)
             }
-            self.delegate?.didGetCardInfo()
         }
     }
 }

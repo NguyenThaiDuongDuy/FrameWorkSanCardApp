@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Card {
+struct Card {
     public var cardHolder: String
     public var cardNumber: String
     public var issueDate: String?
